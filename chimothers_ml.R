@@ -103,23 +103,26 @@ Analysis <- function(read_data, vcf) {
     summarise(sum_lp = sum(lp))
   by_fam_p <- ggplot(by_fam_summ, aes(x = offset, y = sum_lp, col=rel, group = paste(family, rel))) + 
     geom_text(aes(label = family)) + facet_wrap(~rel) + xlim(0, 0.002)
-  
+  ggsave("Results/aug_31_by_family_ml_result.pdf")
   overall_summ <- offset_lps %>%
     group_by(offset, rel) %>%
     summarise(sum_lp = sum(lp))
   overall_p <- ggplot(overall_summ, aes(x = offset, y = sum_lp, col=rel)) + 
     geom_line()
-  
-  father_error_rates <- sample_error_rates %>%
+  ggsave("Results/aug_31_overall_ml_result.pdf")
+  parent_error_rates <- sample_error_rates %>%
     ungroup() %>%
-    filter(rel == "Father", 
-           family %in% by_fam_summ$family) %>%
+    filter(family %in% by_fam_summ$family) %>%
     transmute(family, rel, GT, n, perc_right, perc_wrong, perc_oth) %>%
     as.data.frame()
-  
-  father_error_rates %>%
-    arrange(perc_wrong) %>%
-    kable(digits = 4, format = "rst")
+  write.csv(parent_error_rates %>% 
+              filter(rel == "Father") %>%
+              arrange(desc(perc_wrong)), "Results/aug_31_father_error_rates.csv", 
+            row.names = F)
+  write.csv(parent_error_rates %>% 
+              filter(rel == "Mother") %>%
+              arrange(desc(perc_wrong)), "Results/aug_31_mother_error_rates.csv", 
+            row.names = F)
 }
 
 GetSampleErrorRates <- function(read_data) {
